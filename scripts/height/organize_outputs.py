@@ -1,0 +1,95 @@
+from __future__ import annotations
+
+import shutil
+import sys
+from pathlib import Path
+
+SCRIPTS_DIR = Path(__file__).resolve().parents[1]
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+
+import _bootstrap  # noqa: F401
+
+from wheel_legged.utils.paths import ROOT, task_output_dir
+
+
+HEIGHT_DIR = task_output_dir("height")
+
+FINAL_RESULTS = {
+    "pd": [
+        HEIGHT_DIR / "pd" / "height_step_cycle_L0p28_to_0p36_v0p15_pd.npz",
+        HEIGHT_DIR / "pd" / "height_sine_L0p28_to_0p36_v0p15_pd.npz",
+    ],
+    "nn_mpc": [
+        HEIGHT_DIR / "mpc" / "height_step_cycle_L0p28_to_0p36_v0p15_nn_mpc_torch.npz",
+        HEIGHT_DIR / "mpc" / "height_sine_L0p28_to_0p36_v0p15_nn_mpc_torch.npz",
+    ],
+    "gp_mpc": [
+        HEIGHT_DIR / "mpc" / "height_step_cycle_L0p28_to_0p36_v0p15_gp_mpc.npz",
+        HEIGHT_DIR / "mpc" / "height_sine_L0p28_to_0p36_v0p15_gp_mpc.npz",
+    ],
+}
+
+FINAL_METRICS = [HEIGHT_DIR / "metrics" / "height_summary.csv"]
+FINAL_VIDEOS = [
+    HEIGHT_DIR / "videos" / "01_height_step_pd.mp4",
+    HEIGHT_DIR / "videos" / "01_height_step_pd.gif",
+    HEIGHT_DIR / "videos" / "02_height_step_nn_mpc.mp4",
+    HEIGHT_DIR / "videos" / "02_height_step_nn_mpc.gif",
+    HEIGHT_DIR / "videos" / "03_height_step_gp_mpc.mp4",
+    HEIGHT_DIR / "videos" / "03_height_step_gp_mpc.gif",
+    HEIGHT_DIR / "videos" / "04_height_sine_pd.mp4",
+    HEIGHT_DIR / "videos" / "04_height_sine_pd.gif",
+    HEIGHT_DIR / "videos" / "05_height_sine_nn_mpc.mp4",
+    HEIGHT_DIR / "videos" / "05_height_sine_nn_mpc.gif",
+    HEIGHT_DIR / "videos" / "06_height_sine_gp_mpc.mp4",
+    HEIGHT_DIR / "videos" / "06_height_sine_gp_mpc.gif",
+]
+
+
+def copy_if_exists(src: Path, dst_dir: Path) -> Path | None:
+    if not src.exists():
+        return None
+    dst_dir.mkdir(parents=True, exist_ok=True)
+    dst = dst_dir / src.name
+    shutil.copy2(src, dst)
+    return dst
+
+
+def write_manifest(paths: list[Path]) -> Path:
+    manifest = HEIGHT_DIR / "README.md"
+    rel_paths = [p.relative_to(ROOT).as_posix() for p in paths]
+    lines = [
+        "# Height outputs",
+        "",
+        "Final copied artifacts:",
+        "",
+    ]
+    lines += [f"- {p}" for p in rel_paths]
+    lines.append("")
+    manifest.write_text("\n".join(lines), encoding="utf-8")
+    return manifest
+
+
+def main() -> None:
+    copied: list[Path] = []
+    for name, sources in FINAL_RESULTS.items():
+        for src in sources:
+            dst = copy_if_exists(src, HEIGHT_DIR / "final" / "results" / name)
+            if dst:
+                copied.append(dst)
+    for src in FINAL_METRICS:
+        dst = copy_if_exists(src, HEIGHT_DIR / "final" / "metrics")
+        if dst:
+            copied.append(dst)
+    for src in FINAL_VIDEOS:
+        dst = copy_if_exists(src, HEIGHT_DIR / "final" / "videos")
+        if dst:
+            copied.append(dst)
+    manifest = write_manifest(copied)
+    print(f"copied={len(copied)}")
+    print(f"manifest={manifest}")
+
+
+if __name__ == "__main__":
+    main()
