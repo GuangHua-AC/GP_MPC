@@ -75,6 +75,21 @@ python scripts/balance/render_result.py --npz outputs/balance/mpc/balance_extern
 python scripts/balance/organize_outputs.py
 ```
 
+## GP-PMPC 阶段入口
+
+推荐的 balance GP-PMPC 参数为 `Uw=5, Cw=20, Gw=20, Tw=0, K=2`：
+
+```powershell
+python scripts/pmpc/01_run_python_balance_pmpc.py --horizon 8 --candidates 96 --uncertainty-weight 5 --chance-weight 20 --guide-weight 20 --terminal-weight 0 --push-start 1.0 --seed 0
+python scripts/pmpc/06_plot_balance_pmpc_closeout.py
+```
+
+生成推荐视频：
+
+```powershell
+python scripts/pmpc/05_render_balance_pmpc_recommended.py
+```
+
 ## 转向阶段入口
 
 平衡收尾后，下一步从 `balance_turn` 开始：
