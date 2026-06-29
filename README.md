@@ -90,6 +90,14 @@ python scripts/pmpc/06_plot_balance_pmpc_closeout.py
 python scripts/pmpc/05_render_balance_pmpc_recommended.py
 ```
 
+Turn GP-PMPC 推荐命令：
+
+```powershell
+python scripts/pmpc/07_run_python_turn_pmpc.py --target-deg 30 --v-ref 0.15 --horizon 8 --candidates 96 --uncertainty-weight 5 --chance-weight 20 --guide-weight 20 --terminal-weight 0 --seed 0
+python scripts/pmpc/11_plot_turn_pmpc_closeout.py
+python scripts/pmpc/10_render_turn_pmpc_recommended.py
+```
+
 ## 转向阶段入口
 
 平衡收尾后，下一步从 `balance_turn` 开始：

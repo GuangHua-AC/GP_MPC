@@ -3,6 +3,10 @@ from __future__ import annotations
 import numpy as np
 
 
+def _angle_error(angle: float, ref: float) -> float:
+    return float((angle - ref + np.pi) % (2.0 * np.pi) - np.pi)
+
+
 def safe_norm_std(std) -> np.ndarray:
     arr = np.asarray(std, dtype=float)
     if arr.ndim == 1:
@@ -17,12 +21,25 @@ def terminal_state_cost(state, env, ref) -> float:
     x = s[2]
     x_dot = s[3]
     phi = s[4]
+    yaw = s[6]
+    yaw_dot = s[7]
+    roll = s[8]
+    roll_dot = s[9]
     cost = (
         40.0 * theta**2
         + 40.0 * phi**2
         + 2.0 * (x - ref.x_ref) ** 2
         + 4.0 * (x_dot - ref.v_ref) ** 2
     )
+    if getattr(env, "task", "") in {"balance_turn", "balance_turn_roll"}:
+        yaw_err = _angle_error(float(yaw), float(ref.yaw_ref))
+        roll_err = float(roll - ref.roll_ref)
+        cost += (
+            80.0 * yaw_err**2
+            + 6.0 * yaw_dot**2
+            + 120.0 * roll_err**2
+            + 8.0 * roll_dot**2
+        )
     return float(np.nan_to_num(cost, nan=1e8, posinf=1e8, neginf=1e8))
 
 
