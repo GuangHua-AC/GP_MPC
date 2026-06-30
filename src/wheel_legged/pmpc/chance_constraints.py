@@ -64,7 +64,7 @@ def compute_chance_penalty(
     l0_mu = np.asarray([env.leg.L0(a) for a in alpha], dtype=float)
     l0_std = np.abs(np.asarray([env.leg.J1(a) for a in alpha], dtype=float)) * np.maximum(std[:, 10], 0.0)
     leg_diff_center = np.zeros(mu.shape[0], dtype=float)
-    if getattr(env, "task", "") == "terrain":
+    if getattr(env, "task", "") == "terrain" and getattr(env, "terrain_known_to_controller", True):
         terrain_diffs = []
         for x_value in mu[:, 2]:
             left_h, right_h = terrain_heights(float(x_value), env.terrain_mode, p)

@@ -114,6 +114,14 @@ python scripts/pmpc/21_plot_terrain_pmpc_closeout.py
 python scripts/pmpc/22_render_terrain_pmpc_recommended.py
 ```
 
+Terrain adaptive GP-PMPC 推荐命令：
+
+```powershell
+python scripts/pmpc/23_run_python_terrain_adaptive_pmpc.py --steps 1200 --horizon 4 --candidates 16 --uncertainty-weight 5 --chance-weight 200 --guide-weight 50 --terminal-weight 0 --noise-scale 0.03 --random-fraction 0.0 --adaptive-gain 0.5 --adaptive-limit 0.08 --seed 0
+python scripts/pmpc/26_plot_terrain_adaptive_pmpc_closeout.py
+python scripts/pmpc/27_render_terrain_adaptive_pmpc_recommended.py
+```
+
 ## 转向阶段入口
 
 平衡收尾后，下一步从 `balance_turn` 开始：
