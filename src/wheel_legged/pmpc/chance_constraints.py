@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 
+from wheel_legged.dynamics.terrain import terrain_heights
+
 
 def _as_2d(values: np.ndarray) -> np.ndarray:
     arr = np.asarray(values, dtype=float)
@@ -57,13 +59,28 @@ def compute_chance_penalty(
 
     p = env.p
     x_limit = ref.x_limit if ref.x_limit is not None else p.max_abs_x
+    roll_limit = min(p.max_abs_roll, 0.06) if getattr(env, "task", "") == "terrain" else p.max_abs_roll
+    alpha = np.asarray([env.leg.clip_alpha(a) for a in mu[:, 10]], dtype=float)
+    l0_mu = np.asarray([env.leg.L0(a) for a in alpha], dtype=float)
+    l0_std = np.abs(np.asarray([env.leg.J1(a) for a in alpha], dtype=float)) * np.maximum(std[:, 10], 0.0)
+    leg_diff_center = np.zeros(mu.shape[0], dtype=float)
+    if getattr(env, "task", "") == "terrain":
+        terrain_diffs = []
+        for x_value in mu[:, 2]:
+            left_h, right_h = terrain_heights(float(x_value), env.terrain_mode, p)
+            terrain_diffs.append(left_h - right_h)
+        terrain_diffs = np.asarray(terrain_diffs, dtype=float)
+        leg_diff_center = -terrain_diffs
+
     term_map = {
         "theta": _constraint_penalty(mu[:, 0], std[:, 0], 0.0, p.max_abs_theta, k_sigma, warning_ratio),
         "phi": _constraint_penalty(mu[:, 4], std[:, 4], 0.0, p.max_abs_phi, k_sigma, warning_ratio),
         "x": _constraint_penalty(mu[:, 2], std[:, 2], ref.x_ref, x_limit, k_sigma, warning_ratio),
+        "L0": _constraint_penalty(l0_mu, l0_std, ref.L0_ref, 0.08, k_sigma, warning_ratio),
+        "alpha": _constraint_penalty(mu[:, 10], std[:, 10], env.leg.alpha_from_L0(ref.L0_ref), 0.8, k_sigma, warning_ratio),
         "yaw": _constraint_penalty(mu[:, 6], std[:, 6], 0.0, p.max_abs_yaw, k_sigma, warning_ratio),
-        "roll": _constraint_penalty(mu[:, 8], std[:, 8], ref.roll_ref, p.max_abs_roll, k_sigma, warning_ratio),
-        "leg_diff": _constraint_penalty(mu[:, 12], std[:, 12], 0.0, p.leg_diff_limit, k_sigma, warning_ratio),
+        "roll": _constraint_penalty(mu[:, 8], std[:, 8], ref.roll_ref, roll_limit, k_sigma, warning_ratio),
+        "leg_diff": _constraint_penalty(mu[:, 12], std[:, 12], leg_diff_center, p.leg_diff_limit, k_sigma, warning_ratio),
     }
     terms = [term_map[name] for name in enabled if name in term_map]
     if not terms:

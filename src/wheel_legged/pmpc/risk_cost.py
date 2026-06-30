@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 
+from wheel_legged.dynamics.terrain import terrain_heights
+
 
 def _angle_error(angle: float, ref: float) -> float:
     return float((angle - ref + np.pi) % (2.0 * np.pi) - np.pi)
@@ -25,6 +27,8 @@ def terminal_state_cost(state, env, ref) -> float:
     yaw_dot = s[7]
     roll = s[8]
     roll_dot = s[9]
+    alpha = s[10]
+    alpha_dot = s[11]
     cost = (
         40.0 * theta**2
         + 40.0 * phi**2
@@ -39,6 +43,24 @@ def terminal_state_cost(state, env, ref) -> float:
             + 6.0 * yaw_dot**2
             + 120.0 * roll_err**2
             + 8.0 * roll_dot**2
+        )
+    if getattr(env, "task", "") == "height":
+        l0 = env.leg.L0(float(alpha))
+        l0_dot = env.leg.L0_dot(float(alpha), float(alpha_dot))
+        cost += 180.0 * (l0 - ref.L0_ref) ** 2 + 8.0 * (l0_dot - ref.L0_dot_ref) ** 2
+    if getattr(env, "task", "") == "terrain":
+        leg_diff = s[12]
+        leg_diff_dot = s[13]
+        left_h, right_h = terrain_heights(float(x), env.terrain_mode, env.p)
+        terrain_diff = left_h - right_h
+        leg_diff_ref = -terrain_diff
+        support_roll = np.arctan2(terrain_diff + leg_diff, env.p.D)
+        cost += (
+            80.0 * roll**2
+            + 6.0 * roll_dot**2
+            + 80.0 * support_roll**2
+            + 120.0 * (leg_diff - leg_diff_ref) ** 2
+            + 4.0 * leg_diff_dot**2
         )
     return float(np.nan_to_num(cost, nan=1e8, posinf=1e8, neginf=1e8))
 

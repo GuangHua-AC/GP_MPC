@@ -98,6 +98,22 @@ python scripts/pmpc/11_plot_turn_pmpc_closeout.py
 python scripts/pmpc/10_render_turn_pmpc_recommended.py
 ```
 
+Height GP-PMPC 推荐命令：
+
+```powershell
+python scripts/pmpc/12_run_python_height_pmpc.py --mode step --low 0.30 --high 0.34 --switch-time 2.0 --horizon 8 --candidates 96 --uncertainty-weight 5 --chance-weight 20 --guide-weight 20 --terminal-weight 0 --seed 0
+python scripts/pmpc/15_plot_height_pmpc_closeout.py
+python scripts/pmpc/16_render_height_pmpc_recommended.py
+```
+
+Known terrain GP-PMPC 推荐命令：
+
+```powershell
+python scripts/pmpc/17_run_python_terrain_pmpc.py --steps 1200 --horizon 4 --candidates 16 --uncertainty-weight 5 --chance-weight 200 --guide-weight 50 --terminal-weight 0 --noise-scale 0.03 --random-fraction 0.0 --seed 0
+python scripts/pmpc/21_plot_terrain_pmpc_closeout.py
+python scripts/pmpc/22_render_terrain_pmpc_recommended.py
+```
+
 ## 转向阶段入口
 
 平衡收尾后，下一步从 `balance_turn` 开始：

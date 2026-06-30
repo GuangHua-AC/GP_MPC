@@ -26,6 +26,7 @@ class RiskAwareMPCConfig:
     uncertainty_weight: float = 5.0
     chance_weight: float = 50.0
     guide_weight: float = 0.0
+    guide_action_weights: np.ndarray | None = None
     k_sigma: float = 2.0
     terminal_weight: float = 0.0
     chance_enabled: tuple[str, ...] = ("theta", "phi", "x")
@@ -102,6 +103,12 @@ class RiskAwareShootingMPC:
         use_terminal = cfg.terminal_weight > 0.0
         use_guide = cfg.guide_weight > 0.0
         action_range = np.maximum(self.high - self.low, 1e-6)
+        if cfg.guide_action_weights is None:
+            guide_action_weights = np.ones(self.env.action_dim, dtype=float)
+        else:
+            guide_action_weights = np.asarray(cfg.guide_action_weights, dtype=float).reshape(self.env.action_dim)
+            guide_action_weights = np.nan_to_num(guide_action_weights, nan=1.0, posinf=1.0, neginf=1.0)
+            guide_action_weights = np.maximum(guide_action_weights, 0.0)
 
         for t in range(cfg.horizon):
             actions = seq[:, t, :]
@@ -128,7 +135,7 @@ class RiskAwareShootingMPC:
                     chance_penalty += c_penalty
                     costs += cfg.chance_weight * c_penalty
             if use_guide:
-                g_cost = np.sum(((actions - guide_action) / action_range) ** 2, axis=1)
+                g_cost = np.sum(guide_action_weights * ((actions - guide_action) / action_range) ** 2, axis=1)
                 guide_cost += g_cost
                 costs += cfg.guide_weight * g_cost
 
@@ -155,6 +162,7 @@ class RiskAwareShootingMPC:
             "uncertainty_weight": float(cfg.uncertainty_weight),
             "chance_weight": float(cfg.chance_weight),
             "guide_weight": float(cfg.guide_weight),
+            "guide_action_weights": guide_action_weights.copy(),
             "terminal_weight": float(cfg.terminal_weight),
             "max_abs_action": float(np.max(np.abs(seq[best, 0]))),
         }
