@@ -122,6 +122,55 @@ python scripts/pmpc/26_plot_terrain_adaptive_pmpc_closeout.py
 python scripts/pmpc/27_render_terrain_adaptive_pmpc_recommended.py
 ```
 
+## Capability Scene 最终推荐入口
+
+最终推荐的大场景视频统一使用 `capability_scene_final` 命名：
+
+```powershell
+python scripts\panorama\36_make_capability_scene_final.py
+```
+
+输出：
+
+```text
+outputs/panorama/capability_scene/capability_scene_final.npz
+outputs/panorama/videos/capability_scene_final.mp4
+outputs/panorama/videos/capability_scene_final.gif
+outputs/panorama/figures/capability_scene_final_snapshot.png
+```
+
+清理旧 panorama 展示输出时，先 dry-run：
+
+```powershell
+python scripts\panorama\37_cleanup_panorama_outputs.py
+python scripts\panorama\37_cleanup_panorama_outputs.py --apply
+```
+
+旧版本会移动到 `outputs/panorama/archive/deprecated/`。`capability_scene_final` 才是 README、论文和答辩推荐引用版本。该视频是读取各任务 closeout `.npz` 后映射到统一 3D 场景的展示视频，不是实时自动避障统一仿真。
+
+## GP-PMPC 实验总览
+
+汇总 `balance`、`turn`、`height`、`known terrain`、`terrain adaptive` 五个 pure Python GP-PMPC closeout 结果，用于论文实验章节总表和总览图：
+
+```powershell
+python scripts\pmpc\28_collect_pmpc_overview.py
+python scripts\pmpc\29_plot_pmpc_summary.py
+```
+
+输出：
+
+```text
+outputs/pmpc_overview/metrics/pmpc_overview.csv
+outputs/pmpc_overview/figures/pmpc_task_summary.png
+outputs/pmpc_overview/figures/pmpc_task_summary.pdf
+```
+
+对应文档：`docs/pmpc_experiment_overview.md`。Capability scene final 仍通过以下命令生成：
+
+```powershell
+python scripts\panorama\36_make_capability_scene_final.py
+```
+
 ## 转向阶段入口
 
 平衡收尾后，下一步从 `balance_turn` 开始：
